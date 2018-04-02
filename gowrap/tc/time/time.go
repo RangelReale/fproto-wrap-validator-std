@@ -6,7 +6,7 @@ import (
 	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto-wrap-std/gowrap/tc/time"
-	"github.com/RangelReale/fproto-wrap-validator-std/gowrap"
+	"github.com/RangelReale/fproto-wrap-validator/gowrap"
 	"github.com/RangelReale/fproto-wrap/gowrap"
 )
 
@@ -15,15 +15,21 @@ import (
 // Validates google.protobuf.Timestamp as time.Time
 //
 
-type DefaultTypeValidatorPlugin_Time struct {
+type TypeValidatorPlugin_Time struct {
 }
 
-func (t *DefaultTypeValidatorPlugin_Time) GetDefaultTypeValidator(typeinfo fproto_gowrap.TypeInfo, tp *fdep.DepType) fproto_gowrap_validator_std.DefaultTypeValidator {
-	if typeinfo.Converter().TCID() == fprotostd_gowrap_time.TCID_TIME {
-		return &DefaultTypeValidator_Time{}
-	}
-	if typeinfo.Converter().TCID() == fprotostd_gowrap_time.TCID_NULLTIME {
-		return &DefaultTypeValidator_NullTime{}
+func (t *TypeValidatorPlugin_Time) GetTypeValidator(validatorType *fdep.OptionType, typeinfo fproto_gowrap.TypeInfo, tp *fdep.DepType) fproto_gowrap_validator.TypeValidator {
+	// validate.field
+	if validatorType.Option != nil &&
+		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validate.proto" &&
+		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" &&
+		validatorType.Name == "field" {
+		if typeinfo.Converter().TCID() == fprotostd_gowrap_time.TCID_TIME {
+			return &TypeValidator_Time{}
+		}
+		if typeinfo.Converter().TCID() == fprotostd_gowrap_time.TCID_NULLTIME {
+			return &TypeValidator_NullTime{}
+		}
 	}
 
 	return nil
@@ -32,10 +38,10 @@ func (t *DefaultTypeValidatorPlugin_Time) GetDefaultTypeValidator(typeinfo fprot
 //
 // Time
 //
-type DefaultTypeValidator_Time struct {
+type TypeValidator_Time struct {
 }
 
-func (v *DefaultTypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	for agn, agv := range option.AggregatedValues {
@@ -67,10 +73,10 @@ func (v *DefaultTypeValidator_Time) GenerateValidation(g *fproto_gowrap.Generato
 //
 // NullTime
 //
-type DefaultTypeValidator_NullTime struct {
+type TypeValidator_NullTime struct {
 }
 
-func (v *DefaultTypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	for agn, agv := range option.AggregatedValues {

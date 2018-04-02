@@ -10,51 +10,46 @@ import (
 	"github.com/RangelReale/fproto-wrap/gowrap"
 )
 
-type TypeValidatorPlugin_Default struct {
-	DefaultTypeValidators []DefaultTypeValidatorPlugin
+type ValidatorPlugin_Std struct {
+	//DefaultTypeValidators []DefaultTypeValidatorPlugin
 }
 
-func (tp *TypeValidatorPlugin_Default) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
+func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
 	// validate.field
 	if validatorType.Option != nil &&
-		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validate/validate.proto" &&
+		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validate.proto" &&
 		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" &&
 		validatorType.Name == "field" {
-		return &TypeValidator_Default{DefaultTypeValidators: tp.DefaultTypeValidators}
+		return &Validator_Std{validatorType: validatorType}
 	}
 	return nil
 }
 
-func (tp *TypeValidatorPlugin_Default) ValidatorPrefixes() []string {
+func (tp *ValidatorPlugin_Std) ValidatorPrefixes() []string {
 	return []string{"validate"}
 }
 
-type TypeValidator_Default struct {
-	DefaultTypeValidators []DefaultTypeValidatorPlugin
+type Validator_Std struct {
+	validatorType *fdep.OptionType
 }
 
-func (t *TypeValidator_Default) GenerateValidation(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	tinfo := g.G().GetTypeInfo(tp)
 
 	if tinfo.Converter().TCID() == fproto_gowrap.TCID_SCALAR {
 		return t.generateValidation_scalar(g, tp, tinfo, option, varSrc, varError)
 	}
 
-	var tv DefaultTypeValidator
-	for _, tvp := range t.DefaultTypeValidators {
-		if tv = tvp.GetDefaultTypeValidator(tinfo, tp); tv != nil {
-			break
-		}
-	}
+	tv := vh.GetTypeValidator(t.validatorType, tinfo, tp)
 
 	if tv != nil {
-		return tv.GenerateValidation(g, tp, option, varSrc, varError)
+		return tv.GenerateValidation(g, vh, tp, option, varSrc, varError)
 	}
 
 	return fmt.Errorf("Unknown type for validator: %s", tp.FullOriginalName())
 }
 
-func (t *TypeValidator_Default) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	var opag []string

@@ -6,7 +6,7 @@ import (
 	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto-wrap-std/gowrap/tc/uuid"
-	"github.com/RangelReale/fproto-wrap-validator-std/gowrap"
+	"github.com/RangelReale/fproto-wrap-validator/gowrap"
 	"github.com/RangelReale/fproto-wrap/gowrap"
 )
 
@@ -15,15 +15,21 @@ import (
 // Validates fproto_wrap.UUID
 //
 
-type DefaultTypeValidatorPlugin_UUID struct {
+type TypeValidatorPlugin_UUID struct {
 }
 
-func (t *DefaultTypeValidatorPlugin_UUID) GetDefaultTypeValidator(typeinfo fproto_gowrap.TypeInfo, tp *fdep.DepType) fproto_gowrap_validator_std.DefaultTypeValidator {
-	if typeinfo.Converter().TCID() == fprotostd_gowrap_uuid.TCID_UUID {
-		return &DefaultTypeValidator_UUID{}
-	}
-	if typeinfo.Converter().TCID() == fprotostd_gowrap_uuid.TCID_NULLUUID {
-		return &DefaultTypeValidator_NullUUID{}
+func (t *TypeValidatorPlugin_UUID) GetTypeValidator(validatorType *fdep.OptionType, typeinfo fproto_gowrap.TypeInfo, tp *fdep.DepType) fproto_gowrap_validator.TypeValidator {
+	// validate.field
+	if validatorType.Option != nil &&
+		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validate.proto" &&
+		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" &&
+		validatorType.Name == "field" {
+		if typeinfo.Converter().TCID() == fprotostd_gowrap_uuid.TCID_UUID {
+			return &TypeValidator_UUID{}
+		}
+		if typeinfo.Converter().TCID() == fprotostd_gowrap_uuid.TCID_NULLUUID {
+			return &TypeValidator_NullUUID{}
+		}
 	}
 
 	return nil
@@ -32,10 +38,10 @@ func (t *DefaultTypeValidatorPlugin_UUID) GetDefaultTypeValidator(typeinfo fprot
 //
 // UUID
 //
-type DefaultTypeValidator_UUID struct {
+type TypeValidator_UUID struct {
 }
 
-func (v *DefaultTypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	uuid_alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 	errors_alias := g.DeclDep("errors", "errors")
 
@@ -68,10 +74,10 @@ func (v *DefaultTypeValidator_UUID) GenerateValidation(g *fproto_gowrap.Generato
 //
 // NullUUID
 //
-type DefaultTypeValidator_NullUUID struct {
+type TypeValidator_NullUUID struct {
 }
 
-func (v *DefaultTypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	uuid_alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 	errors_alias := g.DeclDep("errors", "errors")
 
