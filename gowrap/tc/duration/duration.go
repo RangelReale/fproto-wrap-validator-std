@@ -6,7 +6,7 @@ import (
 	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto"
 	"github.com/RangelReale/fproto-wrap-std/gowrap/tc/duration"
-	"github.com/RangelReale/fproto-wrap-validator-std/gowrap/validate"
+	"github.com/RangelReale/fproto-wrap-validator-std/gowrap"
 	"github.com/RangelReale/fproto-wrap/gowrap"
 )
 
