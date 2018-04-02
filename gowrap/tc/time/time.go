@@ -55,10 +55,10 @@ func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 			if agv.Source == "true" {
 				g.P("if ", varSrc, ".IsZero() {")
 				g.In()
-				g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 				g.Out()
 				g.P("}")
-				g.GenerateSimpleErrorCheck()
+				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 
@@ -90,10 +90,10 @@ func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFi
 			if agv.Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", varSrc, ".IsZero() {")
 				g.In()
-				g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 				g.Out()
 				g.P("}")
-				g.GenerateSimpleErrorCheck()
+				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 

@@ -56,10 +56,10 @@ func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 			if agv.Source == "true" {
 				g.P("if ", uuid_alias, ".Equal(", varSrc, ", uuid.Nil) {")
 				g.In()
-				g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 				g.Out()
 				g.P("}")
-				g.GenerateSimpleErrorCheck()
+				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 
@@ -92,10 +92,10 @@ func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFi
 			if agv.Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", uuid_alias, ".Equal(", varSrc, ".UUID, uuid.Nil) {")
 				g.In()
-				g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 				g.Out()
 				g.P("}")
-				g.GenerateSimpleErrorCheck()
+				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 

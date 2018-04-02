@@ -11,7 +11,6 @@ import (
 )
 
 type ValidatorPlugin_Std struct {
-	//DefaultTypeValidators []DefaultTypeValidatorPlugin
 }
 
 func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
@@ -37,7 +36,7 @@ func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fp
 	tinfo := g.G().GetTypeInfo(tp)
 
 	if tinfo.Converter().TCID() == fproto_gowrap.TCID_SCALAR {
-		return t.generateValidation_scalar(g, tp, tinfo, option, varSrc, varError)
+		return t.generateValidation_scalar(g, vh, tp, tinfo, option, varSrc, varError)
 	}
 
 	tv := vh.GetTypeValidator(t.validatorType, tinfo, tp)
@@ -49,7 +48,7 @@ func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fp
 	return fmt.Errorf("Unknown type for validator: %s", tp.FullOriginalName())
 }
 
-func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	var opag []string
@@ -77,10 +76,10 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 				if agv.Source == "true" {
 					g.P("if ", varSrc, " == 0 {")
 					g.In()
-					g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+					g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 					g.Out()
 					g.P("}")
-					g.GenerateSimpleErrorCheck()
+					vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 				}
 			}
 			//
@@ -95,10 +94,10 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 				if agv.Source == "true" {
 					g.P("if ", varSrc, " == 0 {")
 					g.In()
-					g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+					g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 					g.Out()
 					g.P("}")
-					g.GenerateSimpleErrorCheck()
+					vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 				}
 			}
 			//
@@ -113,19 +112,19 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 				if agv.Source == "true" {
 					g.P("if ", varSrc, " == \"\" {")
 					g.In()
-					g.P("err = ", errors_alias, ".New(\"Cannot be blank\")")
+					g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 					g.Out()
 					g.P("}")
-					g.GenerateSimpleErrorCheck()
+					vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
 				}
 			} else if agn == "length_eq" {
 				supported = true
 				g.P("if len(", varSrc, ") != ", agv.Source, " {")
 				g.In()
-				g.P("err = ", errors_alias, ".New(\"Length must be ", agv.Source, "\")")
+				g.P(varError, " = ", errors_alias, ".New(\"Length must be ", agv.Source, "\")")
 				g.Out()
 				g.P("}")
-				g.GenerateSimpleErrorCheck()
+				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_LENGTH)
 			}
 		}
 
