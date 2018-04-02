@@ -14,7 +14,7 @@ type TypeValidatorPlugin_Default struct {
 	DefaultTypeValidators []DefaultTypeValidatorPlugin
 }
 
-func (tp *TypeValidatorPlugin_Default) GetTypeValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.TypeValidator {
+func (tp *TypeValidatorPlugin_Default) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
 	// validate.field
 	if validatorType.Option != nil &&
 		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validate/validate.proto" &&
