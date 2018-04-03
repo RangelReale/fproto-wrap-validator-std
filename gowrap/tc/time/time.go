@@ -41,7 +41,7 @@ func (t *TypeValidatorPlugin_Time) GetTypeValidator(validatorType *fdep.OptionTy
 type TypeValidator_Time struct {
 }
 
-func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	for _, agn := range option.AggregatedSorted() {
@@ -55,10 +55,9 @@ func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, ".IsZero() {")
 				g.In()
-				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 
@@ -76,7 +75,7 @@ func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 type TypeValidator_NullTime struct {
 }
 
-func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	for _, agn := range option.AggregatedSorted() {
@@ -90,10 +89,9 @@ func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFi
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", varSrc, ".IsZero() {")
 				g.In()
-				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 

@@ -41,7 +41,7 @@ func (t *TypeValidatorPlugin_UUID) GetTypeValidator(validatorType *fdep.OptionTy
 type TypeValidator_UUID struct {
 }
 
-func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	uuid_alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 	errors_alias := g.DeclDep("errors", "errors")
 
@@ -56,10 +56,9 @@ func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", uuid_alias, ".Equal(", varSrc, ", uuid.Nil) {")
 				g.In()
-				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 
@@ -71,7 +70,7 @@ func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 	return nil
 }
 
-func (v *TypeValidator_UUID) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_UUID) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	return nil
 }
 
@@ -81,7 +80,7 @@ func (v *TypeValidator_UUID) GenerateValidationRepeated(g *fproto_gowrap.Generat
 type TypeValidator_NullUUID struct {
 }
 
-func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	uuid_alias := g.DeclDep("github.com/RangelReale/go.uuid", "uuid")
 	errors_alias := g.DeclDep("errors", "errors")
 
@@ -96,10 +95,9 @@ func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFi
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", uuid_alias, ".Equal(", varSrc, ".UUID, uuid.Nil) {")
 				g.In()
-				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 

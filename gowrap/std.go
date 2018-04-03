@@ -43,7 +43,7 @@ func (tp *Validator_Std) FPValidator() {
 
 }
 
-func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	if option.ParenthesizedName != "validate.field" {
 		return nil
 	}
@@ -51,19 +51,19 @@ func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fp
 	tinfo := g.G().GetTypeInfo(tp)
 
 	if tinfo.Converter().TCID() == fproto_gowrap.TCID_SCALAR {
-		return t.generateValidation_scalar(g, vh, tp, tinfo, option, varSrc, varError)
+		return t.generateValidation_scalar(g, vh, tp, tinfo, option, varSrc)
 	}
 
 	tv := vh.GetTypeValidator(t.validatorType, tinfo, tp)
 
 	if tv != nil {
-		return tv.GenerateValidation(g, vh, tp, option, varSrc, varError)
+		return tv.GenerateValidation(g, vh, tp, option, varSrc)
 	}
 
 	return fmt.Errorf("Unknown type for validator: %s", tp.FullOriginalName())
 }
 
-func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	var opag []string
 	for _, agn := range option.AggregatedSorted() {
 		opag = append(opag, fmt.Sprintf("%s=%s", agn, option.AggregatedValues[agn].Source))
@@ -78,23 +78,23 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 		//
 		// INTEGER
 		//
-		return t.generateValidation_scalar_int(g, vh, tp, tinfo, option, varSrc, varError)
+		return t.generateValidation_scalar_int(g, vh, tp, tinfo, option, varSrc)
 	case fproto.DoubleScalar, fproto.FloatScalar:
 		//
 		// FLOAT
 		//
-		return t.generateValidation_scalar_float(g, vh, tp, tinfo, option, varSrc, varError)
+		return t.generateValidation_scalar_float(g, vh, tp, tinfo, option, varSrc)
 	case fproto.StringScalar:
 		//
 		// STRING
 		//
-		return t.generateValidation_scalar_string(g, vh, tp, tinfo, option, varSrc, varError)
+		return t.generateValidation_scalar_string(g, vh, tp, tinfo, option, varSrc)
 	}
 
 	return fmt.Errorf("Validation not supported for type %s", tp.FullOriginalName())
 }
 
-func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	for _, agn := range option.AggregatedSorted() {
@@ -107,10 +107,9 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, " == 0 {")
 				g.In()
-				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		} else if agn == "int_gt" {
 			//
@@ -119,10 +118,10 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 			supported = true
 			g.P("if ", varSrc, " <= ", option.AggregatedValues[agn].Source, " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must be greater than `, option.AggregatedValues[agn].Source, `")`)
+			error_msg := fmt.Sprintf(`%s.New("Must be greater than %s")`, errors_alias, option.AggregatedValues[agn].Source)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gt", option.AggregatedValues[agn].Source)
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gt", option.AggregatedValues[agn].Source)
 		} else if agn == "int_lt" {
 			//
 			// int_lt
@@ -130,10 +129,10 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 			supported = true
 			g.P("if ", varSrc, " >= ", option.AggregatedValues[agn].Source, " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must be lower than `, option.AggregatedValues[agn].Source, `")`)
+			error_msg := fmt.Sprintf(`%s.New("Must be lower than %s")`, errors_alias, option.AggregatedValues[agn].Source)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lt", option.AggregatedValues[agn].Source)
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lt", option.AggregatedValues[agn].Source)
 		} else if agn == "int_gte" {
 			//
 			// int_gte
@@ -141,10 +140,10 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 			supported = true
 			g.P("if ", varSrc, " < ", option.AggregatedValues[agn].Source, " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must be greater or equals to `, option.AggregatedValues[agn].Source, `")`)
+			error_msg := fmt.Sprintf(`%s.New("Must be greater or equals to %s")`, errors_alias, option.AggregatedValues[agn].Source)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gte", option.AggregatedValues[agn].Source)
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gte", option.AggregatedValues[agn].Source)
 		} else if agn == "int_lte" {
 			//
 			// int_lte
@@ -152,10 +151,10 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 			supported = true
 			g.P("if ", varSrc, " > ", option.AggregatedValues[agn].Source, " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must be lower or equals to `, option.AggregatedValues[agn].Source, `")`)
+			error_msg := fmt.Sprintf(`%s.New("Must be lower or equals to %s")`, errors_alias, option.AggregatedValues[agn].Source)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lte", option.AggregatedValues[agn].Source)
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lte", option.AggregatedValues[agn].Source)
 		}
 
 		if !supported {
@@ -166,7 +165,7 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 	return nil
 }
 
-func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	// parse all float values
@@ -209,10 +208,10 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, " == 0 {")
 				g.In()
-				g.P(varError, " = ", errors_alias, `.New("Cannot be blank")`)
+				error_msg := fmt.Sprintf(`%s.New("Cannot be blank")`)
+				vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		} else if strings.HasPrefix(agn, "float_") {
 			supported = true
@@ -234,10 +233,10 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 
 			g.P("if ", varSrc, " <= ", fmt.Sprintf("%f", ffvalue), " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must be greater than `, fmt.Sprintf("%f", *float_fields.float_gt), `")`)
+			error_msg := fmt.Sprintf(`%s.New("Must be greater than %f")`, errors_alias, *float_fields.float_gt)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, "float_gt", fproto_gowrap_validator.VEID_MINMAX, "float_gt", fmt.Sprintf("%f", *float_fields.float_gt))
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, "float_gt", fproto_gowrap_validator.VEID_MINMAX, "float_gt", fmt.Sprintf("%f", *float_fields.float_gt))
 		}
 		// float_gte
 		if float_fields.float_gte != nil {
@@ -248,17 +247,17 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 
 			g.P("if ", varSrc, " < ", fmt.Sprintf("%f", ffvalue), " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must be greater or equals to `, fmt.Sprintf("%f", *float_fields.float_gte), `")`)
+			error_msg := fmt.Sprintf(`%s.New("Must be greater or equals to %f")`, errors_alias, *float_fields.float_gte)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, "float_gte", fproto_gowrap_validator.VEID_MINMAX, "float_gte", fmt.Sprintf("%f", *float_fields.float_gte))
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, "float_gte", fproto_gowrap_validator.VEID_MINMAX, "float_gte", fmt.Sprintf("%f", *float_fields.float_gte))
 		}
 	}
 
 	return nil
 }
 
-func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	for _, agn := range option.AggregatedSorted() {
@@ -271,19 +270,19 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, " == \"\" {")
 				g.In()
-				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
+				error_msg := fmt.Sprintf(`%s.New("Cannot be blank")`, errors_alias)
+				vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		} else if agn == "length_eq" {
 			supported = true
 			g.P("if len(", varSrc, ") != ", option.AggregatedValues[agn].Source, " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, ".New(\"Length must be ", option.AggregatedValues[agn].Source, "\")")
+			error_msg := fmt.Sprintf(`%s.New("Length must be %s")`, errors_alias, option.AggregatedValues[agn].Source)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_LENGTH)
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_LENGTH)
 		} else if agn == "regex" {
 			supported = true
 			regex_alias := g.DeclDep("regexp", "regexp")
@@ -292,12 +291,12 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			g.In()
 			g.P("if stdreerr != nil {")
 			g.In()
-			vh.GenerateValidationErrorCheck(g.G(), "stdreerr", agn, fproto_gowrap_validator.VEID_INTERNAL_ERROR)
+			vh.GenerateValidationErrorAdd(g.G(), "stdreerr", agn, fproto_gowrap_validator.VEID_INTERNAL_ERROR)
 			g.Out()
 			g.P("} else {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Text doesn't match the required pattern")`)
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_PATTERN)
+			error_msg := fmt.Sprintf(`%s.New("Text doesn't match the required pattern")`, errors_alias)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_PATTERN)
 			g.Out()
 			g.P("}")
 			g.Out()
@@ -312,7 +311,7 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 	return nil
 }
 
-func (t *Validator_Std) generateValidation_scalar_repeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std) generateValidation_scalar_repeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	return nil
 }
 
@@ -327,7 +326,7 @@ func (tp *Validator_Std_Repeated) FPValidator() {
 
 }
 
-func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
 	if option.ParenthesizedName != "validate.rfield" {
 		return nil
 	}
@@ -344,10 +343,10 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, " == nil || len(", varSrc, ") == 0 {")
 				g.In()
-				g.P(varError, " = ", errors_alias, `.New("Is required")`)
+				error_msg := fmt.Sprintf(`%s.New("Is required")`, errors_alias)
+				vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		} else if agn == "length_eq" {
 			//
@@ -356,10 +355,10 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 			supported = true
 			g.P("if len(", varSrc, ") != ", option.AggregatedValues[agn].Source, " {")
 			g.In()
-			g.P(varError, " = ", errors_alias, `.New("Must have exactly `, option.AggregatedValues[agn].Source, ` items")`)
+			error_msg := fmt.Sprintf(`%s.New("Must have exactly %s items")`, errors_alias, option.AggregatedValues[agn].Source)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_LENGTH, "eq", option.AggregatedValues[agn].Source)
 			g.Out()
 			g.P("}")
-			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_LENGTH, "eq", option.AggregatedValues[agn].Source)
 			/*
 				} else if agn == "int_gt" {
 					//
