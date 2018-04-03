@@ -97,6 +97,31 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
+	int_fields := &rangeValidation{}
+
+	for agn, agv := range option.AggregatedValues {
+		if strings.HasPrefix(agn, "int_") {
+			_, err := strconv.ParseInt(agv.Source, 10, 64)
+			if err != nil {
+				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
+			}
+			switch agn {
+			case "int_gt":
+				int_fields.gt = new(string)
+				*int_fields.gt = agv.Source
+			case "int_lt":
+				int_fields.lt = new(string)
+				*int_fields.lt = agv.Source
+			case "int_gte":
+				int_fields.gte = new(string)
+				*int_fields.gte = agv.Source
+			case "int_lte":
+				int_fields.lte = new(string)
+				*int_fields.lte = agv.Source
+			}
+		}
+	}
+
 	for _, agn := range option.AggregatedSorted() {
 		supported := false
 		if agn == "xrequired" {
@@ -111,50 +136,9 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 				g.Out()
 				g.P("}")
 			}
-		} else if agn == "int_gt" {
-			//
-			// int_gt
-			//
+		} else if strings.HasPrefix(agn, "int_") {
 			supported = true
-			g.P("if ", varSrc, " <= ", option.AggregatedValues[agn].Source, " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must be greater than %s")`, errors_alias, option.AggregatedValues[agn].Source)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gt", option.AggregatedValues[agn].Source)
-			g.Out()
-			g.P("}")
-		} else if agn == "int_lt" {
-			//
-			// int_lt
-			//
-			supported = true
-			g.P("if ", varSrc, " >= ", option.AggregatedValues[agn].Source, " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must be lower than %s")`, errors_alias, option.AggregatedValues[agn].Source)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lt", option.AggregatedValues[agn].Source)
-			g.Out()
-			g.P("}")
-		} else if agn == "int_gte" {
-			//
-			// int_gte
-			//
-			supported = true
-			g.P("if ", varSrc, " < ", option.AggregatedValues[agn].Source, " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must be greater or equals to %s")`, errors_alias, option.AggregatedValues[agn].Source)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gte", option.AggregatedValues[agn].Source)
-			g.Out()
-			g.P("}")
-		} else if agn == "int_lte" {
-			//
-			// int_lte
-			//
-			supported = true
-			g.P("if ", varSrc, " > ", option.AggregatedValues[agn].Source, " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must be lower or equals to %s")`, errors_alias, option.AggregatedValues[agn].Source)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lte", option.AggregatedValues[agn].Source)
-			g.Out()
-			g.P("}")
+			// checked at bottom
 		}
 
 		if !supported {
@@ -162,38 +146,39 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 		}
 	}
 
+	err := generateRangeValidation(int_fields, g, vh, tp, tinfo, option, varSrc)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
-	errors_alias := g.DeclDep("errors", "errors")
+	float_fields := &rangeValidation{}
 
-	// parse all float values
-	type t_float_fields struct {
-		float_epsilon *float64
-		float_gt      *float64
-		float_lt      *float64
-		float_gte     *float64
-		float_lte     *float64
-	}
-	float_fields := &t_float_fields{}
 	for agn, agv := range option.AggregatedValues {
 		if strings.HasPrefix(agn, "float_") {
-			float_value, err := strconv.ParseFloat(agv.Source, 64)
+			_, err := strconv.ParseFloat(agv.Source, 64)
 			if err != nil {
 				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
 			}
 			switch agn {
 			case "float_gt":
-				float_fields.float_gt = &float_value
+				float_fields.gt = new(string)
+				*float_fields.gt = agv.Source
 			case "float_lt":
-				float_fields.float_lt = &float_value
+				float_fields.lt = new(string)
+				*float_fields.lt = agv.Source
 			case "float_epsilon":
-				float_fields.float_epsilon = &float_value
+				float_fields.epsilon = new(string)
+				*float_fields.epsilon = agv.Source
 			case "float_gte":
-				float_fields.float_gte = &float_value
+				float_fields.gte = new(string)
+				*float_fields.gte = agv.Source
 			case "float_lte":
-				float_fields.float_lte = &float_value
+				float_fields.lte = new(string)
+				*float_fields.lte = agv.Source
 			}
 		}
 	}
@@ -223,35 +208,9 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 		}
 	}
 
-	if float_fields.float_gt != nil || float_fields.float_gte != nil || float_fields.float_lt != nil || float_fields.float_lte != nil {
-		// float_gt
-		if float_fields.float_gt != nil {
-			ffvalue := *float_fields.float_gt
-			if float_fields.float_epsilon != nil {
-				ffvalue -= *float_fields.float_epsilon
-			}
-
-			g.P("if ", varSrc, " <= ", fmt.Sprintf("%f", ffvalue), " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must be greater than %f")`, errors_alias, *float_fields.float_gt)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, "float_gt", fproto_gowrap_validator.VEID_MINMAX, "float_gt", fmt.Sprintf("%f", *float_fields.float_gt))
-			g.Out()
-			g.P("}")
-		}
-		// float_gte
-		if float_fields.float_gte != nil {
-			ffvalue := *float_fields.float_gte
-			if float_fields.float_epsilon != nil {
-				ffvalue -= *float_fields.float_epsilon
-			}
-
-			g.P("if ", varSrc, " < ", fmt.Sprintf("%f", ffvalue), " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must be greater or equals to %f")`, errors_alias, *float_fields.float_gte)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, "float_gte", fproto_gowrap_validator.VEID_MINMAX, "float_gte", fmt.Sprintf("%f", *float_fields.float_gte))
-			g.Out()
-			g.P("}")
-		}
+	err := generateRangeValidation(float_fields, g, vh, tp, tinfo, option, varSrc)
+	if err != nil {
+		return err
 	}
 
 	return nil
