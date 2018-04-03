@@ -359,52 +359,6 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_LENGTH, "eq", option.AggregatedValues[agn].Source)
 			g.Out()
 			g.P("}")
-			/*
-				} else if agn == "int_gt" {
-					//
-					// int_gt
-					//
-					supported = true
-					g.P("if ", varSrc, " <= ", option.AggregatedValues[agn].Source, " {")
-					g.In()
-					g.P(varError, " = ", errors_alias, `.New("Must be greater than `, option.AggregatedValues[agn].Source, `")`)
-					g.Out()
-					g.P("}")
-					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gt", option.AggregatedValues[agn].Source)
-				} else if agn == "int_lt" {
-					//
-					// int_lt
-					//
-					supported = true
-					g.P("if ", varSrc, " >= ", option.AggregatedValues[agn].Source, " {")
-					g.In()
-					g.P(varError, " = ", errors_alias, `.New("Must be lower than `, option.AggregatedValues[agn].Source, `")`)
-					g.Out()
-					g.P("}")
-					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lt", option.AggregatedValues[agn].Source)
-				} else if agn == "int_gte" {
-					//
-					// int_gte
-					//
-					supported = true
-					g.P("if ", varSrc, " < ", option.AggregatedValues[agn].Source, " {")
-					g.In()
-					g.P(varError, " = ", errors_alias, `.New("Must be greater or equals to `, option.AggregatedValues[agn].Source, `")`)
-					g.Out()
-					g.P("}")
-					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gte", option.AggregatedValues[agn].Source)
-				} else if agn == "int_lte" {
-					//
-					// int_lte
-					//
-					supported = true
-					g.P("if ", varSrc, " > ", option.AggregatedValues[agn].Source, " {")
-					g.In()
-					g.P(varError, " = ", errors_alias, `.New("Must be lower or equals to `, option.AggregatedValues[agn].Source, `")`)
-					g.Out()
-					g.P("}")
-					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lte", option.AggregatedValues[agn].Source)
-			*/
 		}
 
 		if !supported {
