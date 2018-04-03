@@ -44,7 +44,7 @@ type TypeValidator_Time struct {
 func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
-	for agn, agv := range option.AggregatedValues {
+	for _, agn := range option.AggregatedSorted() {
 		supported := false
 
 		//
@@ -52,13 +52,13 @@ func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 		//
 		if agn == "xrequired" {
 			supported = true
-			if agv.Source == "true" {
+			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, ".IsZero() {")
 				g.In()
 				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
+				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 
@@ -79,7 +79,7 @@ type TypeValidator_NullTime struct {
 func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
-	for agn, agv := range option.AggregatedValues {
+	for _, agn := range option.AggregatedSorted() {
 		supported := false
 
 		//
@@ -87,13 +87,13 @@ func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFi
 		//
 		if agn == "xrequired" {
 			supported = true
-			if agv.Source == "true" {
+			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", varSrc, ".IsZero() {")
 				g.In()
 				g.P(varError, " = ", errors_alias, ".New(\"Cannot be blank\")")
 				g.Out()
 				g.P("}")
-				vh.GenerateValidationErrorCheck(g.G(), agn, fproto_gowrap_validator.VEID_REQUIRED)
+				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
 			}
 		}
 
