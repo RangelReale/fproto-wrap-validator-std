@@ -6,9 +6,11 @@ import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.FieldOptions {
     optional FieldValidator field = 48771;
+    optional RepeatedFieldValidator rfield = 48772;
 }
 
 message FieldValidator {
+    // Whether the field is required.
     optional bool xrequired = 1;
     // Uses a Golang RE2-syntax regex to match the field contents.
     optional string regex = 2;
@@ -62,4 +64,19 @@ message FieldValidator {
     // Repeated field with at most this number of elements.
     optional int64 repeated_count_max = 9913;
 
+}
+
+message RepeatedFieldValidator {
+    // Whether the field is required.
+    optional bool xrequired = 1;
+    // Field value of length greater than this value.
+    optional int64 length_gt = 12;
+    // Field value of length smaller than this value.
+    optional int64 length_lt = 13;
+    // Field value of length greater than this value.
+    optional int64 length_gte = 14;
+    // Field value of length smaller than this value.
+    optional int64 length_lte = 15;
+    // Field value of integer strictly equal this value.
+    optional int64 length_eq = 16;
 }

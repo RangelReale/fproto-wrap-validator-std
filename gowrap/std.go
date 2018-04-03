@@ -18,9 +18,12 @@ func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fpro
 	// validate.field
 	if validatorType.Option != nil &&
 		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validate.proto" &&
-		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" &&
-		validatorType.Name == "field" {
-		return &Validator_Std{validatorType: validatorType}
+		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" {
+		if validatorType.Name == "field" {
+			return &Validator_Std{validatorType: validatorType}
+		} else if validatorType.Name == "rfield" {
+			return &Validator_Std_Repeated{validatorType: validatorType}
+		}
 	}
 	return nil
 }
@@ -29,11 +32,22 @@ func (tp *ValidatorPlugin_Std) ValidatorPrefixes() []string {
 	return []string{"validate"}
 }
 
+//
+// Validator_Std
+//
 type Validator_Std struct {
 	validatorType *fdep.OptionType
 }
 
+func (tp *Validator_Std) FPValidator() {
+
+}
+
 func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+	if option.ParenthesizedName != "validate.field" {
+		return nil
+	}
+
 	tinfo := g.G().GetTypeInfo(tp)
 
 	if tinfo.Converter().TCID() == fproto_gowrap.TCID_SCALAR {
@@ -292,6 +306,110 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 
 		if !supported {
 			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+		}
+	}
+
+	return nil
+}
+
+func (t *Validator_Std) generateValidation_scalar_repeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string, varError string) error {
+	return nil
+}
+
+//
+// Validator_Std_Repeated
+//
+type Validator_Std_Repeated struct {
+	validatorType *fdep.OptionType
+}
+
+func (tp *Validator_Std_Repeated) FPValidator() {
+
+}
+
+func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+	if option.ParenthesizedName != "validate.rfield" {
+		return nil
+	}
+
+	errors_alias := g.DeclDep("errors", "errors")
+
+	for _, agn := range option.AggregatedSorted() {
+		supported := false
+		if agn == "xrequired" {
+			//
+			// xrequired
+			//
+			supported = true
+			if option.AggregatedValues[agn].Source == "true" {
+				g.P("if ", varSrc, " == nil || len(", varSrc, ") == 0 {")
+				g.In()
+				g.P(varError, " = ", errors_alias, `.New("Is required")`)
+				g.Out()
+				g.P("}")
+				vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_REQUIRED)
+			}
+		} else if agn == "length_eq" {
+			//
+			// length_eq
+			//
+			supported = true
+			g.P("if len(", varSrc, ") != ", option.AggregatedValues[agn].Source, " {")
+			g.In()
+			g.P(varError, " = ", errors_alias, `.New("Must have exactly `, option.AggregatedValues[agn].Source, ` items")`)
+			g.Out()
+			g.P("}")
+			vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_LENGTH, "eq", option.AggregatedValues[agn].Source)
+			/*
+				} else if agn == "int_gt" {
+					//
+					// int_gt
+					//
+					supported = true
+					g.P("if ", varSrc, " <= ", option.AggregatedValues[agn].Source, " {")
+					g.In()
+					g.P(varError, " = ", errors_alias, `.New("Must be greater than `, option.AggregatedValues[agn].Source, `")`)
+					g.Out()
+					g.P("}")
+					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gt", option.AggregatedValues[agn].Source)
+				} else if agn == "int_lt" {
+					//
+					// int_lt
+					//
+					supported = true
+					g.P("if ", varSrc, " >= ", option.AggregatedValues[agn].Source, " {")
+					g.In()
+					g.P(varError, " = ", errors_alias, `.New("Must be lower than `, option.AggregatedValues[agn].Source, `")`)
+					g.Out()
+					g.P("}")
+					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lt", option.AggregatedValues[agn].Source)
+				} else if agn == "int_gte" {
+					//
+					// int_gte
+					//
+					supported = true
+					g.P("if ", varSrc, " < ", option.AggregatedValues[agn].Source, " {")
+					g.In()
+					g.P(varError, " = ", errors_alias, `.New("Must be greater or equals to `, option.AggregatedValues[agn].Source, `")`)
+					g.Out()
+					g.P("}")
+					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_gte", option.AggregatedValues[agn].Source)
+				} else if agn == "int_lte" {
+					//
+					// int_lte
+					//
+					supported = true
+					g.P("if ", varSrc, " > ", option.AggregatedValues[agn].Source, " {")
+					g.In()
+					g.P(varError, " = ", errors_alias, `.New("Must be lower or equals to `, option.AggregatedValues[agn].Source, `")`)
+					g.Out()
+					g.P("}")
+					vh.GenerateValidationErrorCheck(g.G(), varError, agn, fproto_gowrap_validator.VEID_MINMAX, "int_lte", option.AggregatedValues[agn].Source)
+			*/
+		}
+
+		if !supported {
+			return fmt.Errorf("Validation %s not supported for repeated of type %s", agn, tp.FullOriginalName())
 		}
 	}
 

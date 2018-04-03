@@ -71,6 +71,10 @@ func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 	return nil
 }
 
+func (v *TypeValidator_UUID) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string, varError string) error {
+	return nil
+}
+
 //
 // NullUUID
 //
