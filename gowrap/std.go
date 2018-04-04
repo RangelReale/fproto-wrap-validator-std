@@ -132,6 +132,8 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 				int_fields.setGte(agv.Source)
 			case "int_lte":
 				int_fields.setLte(agv.Source)
+			case "int_eq":
+				int_fields.setEq(agv.Source)
 			default:
 				supported = false
 			}
@@ -191,6 +193,8 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 				float_fields.setGte(agv.Source)
 			case "float_lte":
 				float_fields.setLte(agv.Source)
+			case "float_eq":
+				float_fields.setEq(agv.Source)
 			default:
 				supported = false
 			}
@@ -233,14 +237,6 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 				g.Out()
 				g.P("}")
 			}
-		} else if agn == "length_eq" {
-			supported = true
-			g.P("if len(", varSrc, ") != ", agv.Source, " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Length must be %s")`, errors_alias, agv.Source)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_LENGTH)
-			g.Out()
-			g.P("}")
 		} else if agn == "regex" {
 			supported = true
 			regex_alias := g.DeclDep("regexp", "regexp")
@@ -259,7 +255,7 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			g.P("}")
 			g.Out()
 			g.P("}")
-		} else if strings.HasPrefix(agn, "length") {
+		} else if strings.HasPrefix(agn, "length_") {
 			supported = true
 
 			// checked at bottom
@@ -334,7 +330,7 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 				g.Out()
 				g.P("}")
 			}
-		} else if strings.HasPrefix(agn, "length") {
+		} else if strings.HasPrefix(agn, "length_") {
 			supported = true
 
 			// checked at bottom

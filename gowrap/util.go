@@ -98,7 +98,12 @@ func generateRangeValidation(ranges *rangeValidation, g *fproto_gowrap.Generator
 	}
 
 	if ranges.eq != nil {
-		g.P("if ", varSrc, " != ", *ranges.eq, " {")
+		if ranges.epsilon != nil {
+			g.P("if ", varSrc, " >= ", *ranges.eq, "-", *ranges.epsilon, " && ", varSrc, " <= ", *ranges.eq, "+", *ranges.epsilon, " {")
+		} else {
+			g.P("if ", varSrc, " != ", *ranges.eq, " {")
+		}
+
 		g.In()
 		error_msg := fmt.Sprintf(`%s.New("%s must be exactly equals to %s")`, errors_alias, validationDescription, *ranges.eq)
 		vh.GenerateValidationErrorAdd(g.G(), error_msg, validationItemPrefix+"eq", errorId, "eq", *ranges.eq)

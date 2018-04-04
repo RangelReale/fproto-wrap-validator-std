@@ -15,21 +15,23 @@ message FieldValidator {
     // Uses a Golang RE2-syntax regex to match the field contents.
     optional string regex = 2;
     // Field value of integer strictly greater than this value.
-    optional int64 int_gt = 3;
+    optional int64 int_gt = 30;
     // Field value of integer strictly smaller than this value.
-    optional int64 int_lt = 4;
+    optional int64 int_lt = 31;
     // Field value of integer strictly greater than this value.
-    optional int64 int_gte = 5;
+    optional int64 int_gte = 32;
     // Field value of integer strictly smaller than this value.
-    optional int64 int_lte = 6;
+    optional int64 int_lte = 33;
+    // Field value of integer exactly this value.
+    optional int64 int_eq = 34;
     // Field value of double strictly greater than this value.
     // Note that this value can only take on a valid floating point
     // value. Use together with float_epsilon if you need something more specific.
-    optional double float_gt = 7;
+    optional double float_gt = 40;
     // Field value of double strictly smaller than this value.
     // Note that this value can only take on a valid floating point
     // value. Use together with float_epsilon if you need something more specific.
-    optional double float_lt = 8;
+    optional double float_lt = 41;
     // Field value of double describing the epsilon within which
     // any comparison should be considered to be true. For example,
     // when using float_gt = 0.35, using a float_epsilon of 0.05
@@ -37,33 +39,23 @@ message FieldValidator {
     // thought of as a {float_value_condition} +- {float_epsilon}.
     // If unset, no correction for floating point inaccuracies in
     // comparisons will be attempted.
-    optional double float_epsilon = 9;
+    optional double float_epsilon = 42;
     // Floating-point value compared to which the field content should be greater or equal.
-    optional double float_gte = 10;
+    optional double float_gte = 43;
     // Floating-point value compared to which the field content should be smaller or equal.
-    optional double float_lte = 11;
+    optional double float_lte = 44;
+    // Floating-point value compared to which the field content should be equal or whithin the epsilon.
+    optional double float_eq = 45;
     // Field value of length greater than this value.
-    optional int64 length_gt = 12;
+    optional int64 length_gt = 50;
     // Field value of length smaller than this value.
-    optional int64 length_lt = 13;
+    optional int64 length_lt = 51;
     // Field value of length greater than this value.
-    optional int64 length_gte = 14;
+    optional int64 length_gte = 52;
     // Field value of length smaller than this value.
-    optional int64 length_lte = 15;
+    optional int64 length_lte = 53;
     // Field value of integer strictly equal this value.
-    optional int64 length_eq = 16;
-
-    // Used for nested message types, requires that the message type exists.
-    optional bool msg_exists = 994;
-    // Human error specifies a user-customizable error that is visible to the user.
-    optional string human_error = 995;
-    // Used for string fields, requires the string to be not empty (i.e different from "").
-    optional bool string_not_empty = 9911;
-    // Repeated field with at least this number of elements.
-    optional int64 repeated_count_min = 9912;
-    // Repeated field with at most this number of elements.
-    optional int64 repeated_count_max = 9913;
-
+    optional int64 length_eq = 54;
 }
 
 message RepeatedFieldValidator {
