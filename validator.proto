@@ -1,5 +1,5 @@
 syntax = "proto2";
-package validate;
+package validator;
 option go_package = "github.com/RangelReale/fproto-wrap-validator-std/gowrap/gwproto";
 
 import "google/protobuf/descriptor.proto";

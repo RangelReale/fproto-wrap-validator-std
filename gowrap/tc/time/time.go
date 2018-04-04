@@ -19,10 +19,10 @@ type TypeValidatorPlugin_Time struct {
 }
 
 func (t *TypeValidatorPlugin_Time) GetTypeValidator(validatorType *fdep.OptionType, typeinfo fproto_gowrap.TypeInfo, tp *fdep.DepType) fproto_gowrap_validator.TypeValidator {
-	// validate.field
+	// validator.field
 	if validatorType.Option != nil &&
-		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validate.proto" &&
-		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" &&
+		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validator.proto" &&
+		validatorType.Option.DepFile.ProtoFile.PackageName == "validator" &&
 		validatorType.Name == "field" {
 		if typeinfo.Converter().TCID() == fprotostd_gowrap_time.TCID_TIME {
 			return &TypeValidator_Time{}

@@ -15,10 +15,10 @@ type ValidatorPlugin_Std struct {
 }
 
 func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
-	// validate.field
+	// validator.field
 	if validatorType.Option != nil &&
-		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validate.proto" &&
-		validatorType.Option.DepFile.ProtoFile.PackageName == "validate" {
+		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validator.proto" &&
+		validatorType.Option.DepFile.ProtoFile.PackageName == "validator" {
 		if validatorType.Name == "field" {
 			return &Validator_Std{validatorType: validatorType}
 		} else if validatorType.Name == "rfield" {
@@ -29,7 +29,7 @@ func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fpro
 }
 
 func (tp *ValidatorPlugin_Std) ValidatorPrefixes() []string {
-	return []string{"validate"}
+	return []string{"validator"}
 }
 
 //
@@ -44,7 +44,7 @@ func (tp *Validator_Std) FPValidator() {
 }
 
 func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
-	if option.ParenthesizedName != "validate.field" {
+	if option.ParenthesizedName != "validator.field" {
 		return nil
 	}
 
@@ -309,7 +309,7 @@ func (tp *Validator_Std_Repeated) FPValidator() {
 }
 
 func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
-	if option.ParenthesizedName != "validate.rfield" {
+	if option.ParenthesizedName != "validator.rfield" {
 		return nil
 	}
 
