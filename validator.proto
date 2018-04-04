@@ -9,11 +9,16 @@ extend google.protobuf.FieldOptions {
     optional RepeatedFieldValidator rfield = 48772;
 }
 
+// Field validator. In the case of repeated or map, there rules apply to EACH item, not to the repeated field itself.
+// For the repeated field itself rules, see RepeatedFieldValidator.
 message FieldValidator {
     // Whether the field is required.
     optional bool required = 1;
     // Uses a Golang RE2-syntax regex to match the field contents.
     optional string regex = 2;
+    // Only allow the exact string value.
+    optional string string_eq = 20;
+
     // Field value of integer strictly greater than this value.
     optional int64 int_gt = 30;
     // Field value of integer strictly smaller than this value.
@@ -24,6 +29,9 @@ message FieldValidator {
     optional int64 int_lte = 33;
     // Field value of integer exactly this value.
     optional int64 int_eq = 34;
+    // In the case of enums, only allow defined values, else ignored.
+    optional bool int_enum_check = 70;
+
     // Field value of double strictly greater than this value.
     // Note that this value can only take on a valid floating point
     // value. Use together with float_epsilon if you need something more specific.
@@ -56,6 +64,8 @@ message FieldValidator {
     optional int64 length_lte = 53;
     // Field value of integer strictly equal this value.
     optional int64 length_eq = 54;
+
+    optional bool bool_eq = 60;
 }
 
 message RepeatedFieldValidator {

@@ -60,6 +60,11 @@ func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fp
 		return tv.GenerateValidation(g, vh, tp, option, varSrc)
 	}
 
+	// enum fields are checked like int if they don't have an specific validator
+	if _, tienumok := tp.Item.(*fproto.EnumElement); tienumok {
+		return t.generateValidation_scalar_int(g, vh, tp, tinfo, option, varSrc)
+	}
+
 	return fmt.Errorf("Unknown type for validator: %s", tp.FullOriginalName())
 }
 
@@ -89,6 +94,16 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 		// STRING
 		//
 		return t.generateValidation_scalar_string(g, vh, tp, tinfo, option, varSrc)
+	case fproto.BytesScalar:
+		//
+		// BYTE
+		//
+		return t.generateValidation_scalar_byte(g, vh, tp, tinfo, option, varSrc)
+	case fproto.BoolScalar:
+		//
+		// BOOL
+		//
+		return t.generateValidation_scalar_bool(g, vh, tp, tinfo, option, varSrc)
 	}
 
 	return fmt.Errorf("Validation not supported for type %s", tp.FullOriginalName())
@@ -115,6 +130,26 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 				g.Out()
 				g.P("}")
 			}
+		} else if agn == "int_enum_check" {
+			if tienum, tienumok := tp.Item.(*fproto.EnumElement); tienumok {
+				supported = true
+
+				var check_list []string
+				for _, tv := range tienum.EnumConstants {
+					check_list = append(check_list, fmt.Sprintf("int(%s) != %d", varSrc, tv.Tag))
+				}
+
+				if len(check_list) > 0 {
+					g.P("if ", strings.Join(check_list, " && "), " {")
+					g.In()
+					vh.GenerateValidationErrorAdd(g.G(), errors_alias+`.New("Must be one of the declared values.")`, agn, fproto_gowrap_validator.VEID_INVALID_VALUE)
+					g.Out()
+					g.P("}")
+				} else {
+					vh.GenerateValidationErrorAdd(g.G(), errors_alias+`.New("Enum field type has no declared values.")`, agn, fproto_gowrap_validator.VEID_INTERNAL_ERROR)
+				}
+			}
+
 		} else if strings.HasPrefix(agn, "int_") {
 			supported = true
 
@@ -230,13 +265,20 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 		if agn == "required" {
 			supported = true
 			if agv.Source == "true" {
-				g.P("if ", varSrc, " == \"\" {")
+				g.P("if ", varSrc, ` == "" {`)
 				g.In()
 				error_msg := fmt.Sprintf(`%s.New("Cannot be blank")`, errors_alias)
 				vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
 			}
+		} else if agn == "string_eq" {
+			g.P("if ", varSrc, ` != `, strconv.Quote(agv.Source), ` {`)
+			g.In()
+			error_msg := fmt.Sprintf(`%s.New("Must have the value'`, agv.Source, `'")`, errors_alias)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
+			g.Out()
+			g.P("}")
 		} else if agn == "regex" {
 			supported = true
 			regex_alias := g.DeclDep("regexp", "regexp")
@@ -288,6 +330,93 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 	err := generateRangeValidation(length_fields, g, vh, tp, option, fmt.Sprintf("len(%s)", varSrc), fproto_gowrap_validator.VEID_LENGTH)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (t *Validator_Std) generateValidation_scalar_byte(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
+	errors_alias := g.DeclDep("errors", "errors")
+
+	length_fields := &rangeValidation{}
+
+	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
+		supported := false
+		//
+		// required
+		//
+		if agn == "required" {
+			supported = true
+			if agv.Source == "true" {
+				g.P("if ", varSrc, " == nil || len(", varSrc, ") == 0 {")
+				g.In()
+				error_msg := fmt.Sprintf(`%s.New("Cannot be blank")`, errors_alias)
+				vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
+				g.Out()
+				g.P("}")
+			}
+		} else if strings.HasPrefix(agn, "length_") {
+			supported = true
+
+			// checked at bottom
+			_, err := strconv.ParseFloat(agv.Source, 64)
+			if err != nil {
+				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
+			}
+			switch agn {
+			case "length_gt":
+				length_fields.setGt(agv.Source)
+			case "length_lt":
+				length_fields.setLt(agv.Source)
+			case "length_gte":
+				length_fields.setGte(agv.Source)
+			case "length_lte":
+				length_fields.setLte(agv.Source)
+			case "length_eq":
+				length_fields.setEq(agv.Source)
+			default:
+				supported = false
+			}
+		}
+
+		if !supported {
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+		}
+	}
+
+	// Range: length
+	err := generateRangeValidation(length_fields, g, vh, tp, option, fmt.Sprintf("len(%s)", varSrc), fproto_gowrap_validator.VEID_LENGTH)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *Validator_Std) generateValidation_scalar_bool(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
+	errors_alias := g.DeclDep("errors", "errors")
+
+	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
+		supported := false
+		//
+		// required
+		//
+		if agn == "bool_eq" {
+			g.P("if ", varSrc, ` != `, agv.Source, ` {`)
+			g.In()
+			error_msg := fmt.Sprintf(`%s.New("Must have the value'`, agv.Source, `'")`, errors_alias)
+			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
+			g.Out()
+			g.P("}")
+		}
+
+		if !supported {
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+		}
 	}
 
 	return nil
