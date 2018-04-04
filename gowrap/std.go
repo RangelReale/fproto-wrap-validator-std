@@ -99,46 +99,42 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 
 	int_fields := &rangeValidation{}
 
-	for agn, agv := range option.AggregatedValues {
-		if strings.HasPrefix(agn, "int_") {
-			_, err := strconv.ParseInt(agv.Source, 10, 64)
-			if err != nil {
-				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
-			}
-			switch agn {
-			case "int_gt":
-				int_fields.gt = new(string)
-				*int_fields.gt = agv.Source
-			case "int_lt":
-				int_fields.lt = new(string)
-				*int_fields.lt = agv.Source
-			case "int_gte":
-				int_fields.gte = new(string)
-				*int_fields.gte = agv.Source
-			case "int_lte":
-				int_fields.lte = new(string)
-				*int_fields.lte = agv.Source
-			}
-		}
-	}
-
 	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
 		supported := false
 		if agn == "xrequired" {
 			//
 			// xrequired
 			//
 			supported = true
-			if option.AggregatedValues[agn].Source == "true" {
+			if agv.Source == "true" {
 				g.P("if ", varSrc, " == 0 {")
 				g.In()
-				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+`.New("Cannot be blank")`, agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
 			}
 		} else if strings.HasPrefix(agn, "int_") {
 			supported = true
+
 			// checked at bottom
+			_, err := strconv.ParseInt(agv.Source, 10, 64)
+			if err != nil {
+				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
+			}
+			switch agn {
+			case "int_gt":
+				int_fields.setGt(agv.Source)
+			case "int_lt":
+				int_fields.setLt(agv.Source)
+			case "int_gte":
+				int_fields.setGte(agv.Source)
+			case "int_lte":
+				int_fields.setLte(agv.Source)
+			default:
+				supported = false
+			}
 		}
 
 		if !supported {
@@ -146,7 +142,8 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 		}
 	}
 
-	err := generateRangeValidation(int_fields, g, vh, tp, tinfo, option, varSrc)
+	// Range: int
+	err := generateRangeValidation(int_fields, g, vh, tp, option, varSrc, fproto_gowrap_validator.VEID_MINMAX)
 	if err != nil {
 		return err
 	}
@@ -155,35 +152,12 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 }
 
 func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
+
 	float_fields := &rangeValidation{}
 
-	for agn, agv := range option.AggregatedValues {
-		if strings.HasPrefix(agn, "float_") {
-			_, err := strconv.ParseFloat(agv.Source, 64)
-			if err != nil {
-				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
-			}
-			switch agn {
-			case "float_gt":
-				float_fields.gt = new(string)
-				*float_fields.gt = agv.Source
-			case "float_lt":
-				float_fields.lt = new(string)
-				*float_fields.lt = agv.Source
-			case "float_epsilon":
-				float_fields.epsilon = new(string)
-				*float_fields.epsilon = agv.Source
-			case "float_gte":
-				float_fields.gte = new(string)
-				*float_fields.gte = agv.Source
-			case "float_lte":
-				float_fields.lte = new(string)
-				*float_fields.lte = agv.Source
-			}
-		}
-	}
-
 	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
 		supported := false
 		//
 		// xrequired
@@ -200,7 +174,27 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 			}
 		} else if strings.HasPrefix(agn, "float_") {
 			supported = true
+
 			// checked at bottom
+			_, err := strconv.ParseFloat(agv.Source, 64)
+			if err != nil {
+				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
+			}
+			switch agn {
+			case "float_gt":
+				float_fields.setGt(agv.Source)
+			case "float_lt":
+				float_fields.setLt(agv.Source)
+			case "float_epsilon":
+				float_fields.setEpsilon(agv.Source)
+			case "float_gte":
+				float_fields.setGte(agv.Source)
+			case "float_lte":
+				float_fields.setLte(agv.Source)
+			default:
+				supported = false
+			}
+
 		}
 
 		if !supported {
@@ -208,7 +202,8 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 		}
 	}
 
-	err := generateRangeValidation(float_fields, g, vh, tp, tinfo, option, varSrc)
+	// Range: float
+	err := generateRangeValidation(float_fields, g, vh, tp, option, varSrc, fproto_gowrap_validator.VEID_MINMAX)
 	if err != nil {
 		return err
 	}
@@ -219,14 +214,18 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	errors_alias := g.DeclDep("errors", "errors")
 
+	length_fields := &rangeValidation{}
+
 	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
 		supported := false
 		//
 		// xrequired
 		//
 		if agn == "xrequired" {
 			supported = true
-			if option.AggregatedValues[agn].Source == "true" {
+			if agv.Source == "true" {
 				g.P("if ", varSrc, " == \"\" {")
 				g.In()
 				error_msg := fmt.Sprintf(`%s.New("Cannot be blank")`, errors_alias)
@@ -236,9 +235,9 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			}
 		} else if agn == "length_eq" {
 			supported = true
-			g.P("if len(", varSrc, ") != ", option.AggregatedValues[agn].Source, " {")
+			g.P("if len(", varSrc, ") != ", agv.Source, " {")
 			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Length must be %s")`, errors_alias, option.AggregatedValues[agn].Source)
+			error_msg := fmt.Sprintf(`%s.New("Length must be %s")`, errors_alias, agv.Source)
 			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_LENGTH)
 			g.Out()
 			g.P("}")
@@ -246,7 +245,7 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			supported = true
 			regex_alias := g.DeclDep("regexp", "regexp")
 
-			g.P("if stdrematch, stdreerr := ", regex_alias, ".MatchString(`", option.AggregatedValues[agn].Source, "`, ", varSrc, "); stdreerr != nil || !stdrematch {")
+			g.P("if stdrematch, stdreerr := ", regex_alias, ".MatchString(`", agv.Source, "`, ", varSrc, "); stdreerr != nil || !stdrematch {")
 			g.In()
 			g.P("if stdreerr != nil {")
 			g.In()
@@ -260,6 +259,28 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			g.P("}")
 			g.Out()
 			g.P("}")
+		} else if strings.HasPrefix(agn, "length") {
+			supported = true
+
+			// checked at bottom
+			_, err := strconv.ParseFloat(agv.Source, 64)
+			if err != nil {
+				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
+			}
+			switch agn {
+			case "length_gt":
+				length_fields.setGt(agv.Source)
+			case "length_lt":
+				length_fields.setLt(agv.Source)
+			case "length_gte":
+				length_fields.setGte(agv.Source)
+			case "length_lte":
+				length_fields.setLte(agv.Source)
+			case "length_eq":
+				length_fields.setEq(agv.Source)
+			default:
+				supported = false
+			}
 		}
 
 		if !supported {
@@ -267,10 +288,12 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 		}
 	}
 
-	return nil
-}
+	// Range: length
+	err := generateRangeValidation(length_fields, g, vh, tp, option, fmt.Sprintf("len(%s)", varSrc), fproto_gowrap_validator.VEID_LENGTH)
+	if err != nil {
+		return err
+	}
 
-func (t *Validator_Std) generateValidation_scalar_repeated(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, repeatedType fproto_gowrap_validator.RepeatedType, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
 	return nil
 }
 
@@ -292,14 +315,18 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 
 	errors_alias := g.DeclDep("errors", "errors")
 
+	length_fields := &rangeValidation{}
+
 	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
 		supported := false
 		if agn == "xrequired" {
 			//
 			// xrequired
 			//
 			supported = true
-			if option.AggregatedValues[agn].Source == "true" {
+			if agv.Source == "true" {
 				g.P("if ", varSrc, " == nil || len(", varSrc, ") == 0 {")
 				g.In()
 				error_msg := fmt.Sprintf(`%s.New("Is required")`, errors_alias)
@@ -307,22 +334,39 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 				g.Out()
 				g.P("}")
 			}
-		} else if agn == "length_eq" {
-			//
-			// length_eq
-			//
+		} else if strings.HasPrefix(agn, "length") {
 			supported = true
-			g.P("if len(", varSrc, ") != ", option.AggregatedValues[agn].Source, " {")
-			g.In()
-			error_msg := fmt.Sprintf(`%s.New("Must have exactly %s items")`, errors_alias, option.AggregatedValues[agn].Source)
-			vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_LENGTH, "eq", option.AggregatedValues[agn].Source)
-			g.Out()
-			g.P("}")
+
+			// checked at bottom
+			_, err := strconv.ParseFloat(agv.Source, 64)
+			if err != nil {
+				return fmt.Errorf("Invalid '%s' value '%s': %v", agn, agv.Source, err)
+			}
+			switch agn {
+			case "length_gt":
+				length_fields.setGt(agv.Source)
+			case "length_lt":
+				length_fields.setLt(agv.Source)
+			case "length_gte":
+				length_fields.setGte(agv.Source)
+			case "length_lte":
+				length_fields.setLte(agv.Source)
+			case "length_eq":
+				length_fields.setEq(agv.Source)
+			default:
+				supported = false
+			}
 		}
 
 		if !supported {
 			return fmt.Errorf("Validation %s not supported for repeated of type %s", agn, tp.FullOriginalName())
 		}
+	}
+
+	// Range: length
+	err := generateRangeValidation(length_fields, g, vh, tp, option, fmt.Sprintf("len(%s)", varSrc), fproto_gowrap_validator.VEID_LENGTH)
+	if err != nil {
+		return err
 	}
 
 	return nil
