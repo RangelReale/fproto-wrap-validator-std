@@ -15,7 +15,7 @@ type ValidatorPlugin_Std struct {
 }
 
 func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
-	// validator.field
+	// validator.field ||validator.rfield
 	if validatorType.Option != nil &&
 		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validator.proto" &&
 		validatorType.Option.DepFile.ProtoFile.PackageName == "validator" {
