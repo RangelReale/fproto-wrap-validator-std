@@ -103,9 +103,9 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 		agv := option.AggregatedValues[agn]
 
 		supported := false
-		if agn == "xrequired" {
+		if agn == "required" {
 			//
-			// xrequired
+			// required
 			//
 			supported = true
 			if agv.Source == "true" {
@@ -160,9 +160,9 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 
 		supported := false
 		//
-		// xrequired
+		// required
 		//
-		if agn == "xrequired" {
+		if agn == "required" {
 			supported = true
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, " == 0 {")
@@ -221,9 +221,9 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 
 		supported := false
 		//
-		// xrequired
+		// required
 		//
-		if agn == "xrequired" {
+		if agn == "required" {
 			supported = true
 			if agv.Source == "true" {
 				g.P("if ", varSrc, " == \"\" {")
@@ -321,9 +321,9 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 		agv := option.AggregatedValues[agn]
 
 		supported := false
-		if agn == "xrequired" {
+		if agn == "required" {
 			//
-			// xrequired
+			// required
 			//
 			supported = true
 			if agv.Source == "true" {

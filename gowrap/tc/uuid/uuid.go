@@ -49,9 +49,9 @@ func (v *TypeValidator_UUID) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 		supported := false
 
 		//
-		// xrequired
+		// required
 		//
-		if agn == "xrequired" {
+		if agn == "required" {
 			supported = true
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", uuid_alias, ".Equal(", varSrc, ", uuid.Nil) {")
@@ -88,9 +88,9 @@ func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFi
 		supported := false
 
 		//
-		// xrequired
+		// required
 		//
-		if agn == "xrequired" {
+		if agn == "required" {
 			supported = true
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", uuid_alias, ".Equal(", varSrc, ".UUID, uuid.Nil) {")

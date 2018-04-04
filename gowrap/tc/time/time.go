@@ -48,9 +48,9 @@ func (v *TypeValidator_Time) GenerateValidation(g *fproto_gowrap.GeneratorFile, 
 		supported := false
 
 		//
-		// xrequired
+		// required
 		//
-		if agn == "xrequired" {
+		if agn == "required" {
 			supported = true
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if ", varSrc, ".IsZero() {")
@@ -82,9 +82,9 @@ func (v *TypeValidator_NullTime) GenerateValidation(g *fproto_gowrap.GeneratorFi
 		supported := false
 
 		//
-		// xrequired
+		// required
 		//
-		if agn == "xrequired" {
+		if agn == "required" {
 			supported = true
 			if option.AggregatedValues[agn].Source == "true" {
 				g.P("if !", varSrc, ".Valid || ", varSrc, ".IsZero() {")

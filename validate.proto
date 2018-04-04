@@ -11,7 +11,7 @@ extend google.protobuf.FieldOptions {
 
 message FieldValidator {
     // Whether the field is required.
-    optional bool xrequired = 1;
+    optional bool required = 1;
     // Uses a Golang RE2-syntax regex to match the field contents.
     optional string regex = 2;
     // Field value of integer strictly greater than this value.
@@ -68,7 +68,7 @@ message FieldValidator {
 
 message RepeatedFieldValidator {
     // Whether the field is required.
-    optional bool xrequired = 1;
+    optional bool required = 1;
     // Field value of length greater than this value.
     optional int64 length_gt = 12;
     // Field value of length smaller than this value.
