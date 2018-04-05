@@ -18,6 +18,10 @@ type rangeValidation struct {
 	eq      *string
 }
 
+func (r *rangeValidation) isEmpty() bool {
+	return r.gt == nil && r.gte == nil && r.lt == nil && r.lte == nil && r.eq == nil
+}
+
 func (r *rangeValidation) setGt(v string) {
 	r.gt = &v
 }

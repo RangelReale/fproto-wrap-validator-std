@@ -65,6 +65,15 @@ func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fp
 		return t.generateValidation_scalar_int(g, vh, tp, tinfo, option, varSrc)
 	}
 
+	// try to check message field
+	if _, timsgok := tp.Item.(*fproto.MessageElement); timsgok {
+		if vmsgok, vmsgerr := t.generateValidation_message(g, vh, tp, tinfo, option, varSrc); vmsgerr != nil {
+			return vmsgerr
+		} else if vmsgok {
+			return nil
+		}
+	}
+
 	return fmt.Errorf("Unknown type for validator: %s", tp.FullOriginalName())
 }
 
@@ -320,9 +329,18 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 	}
 
 	// Range: length
-	err := generateRangeValidation(length_fields, g, vh, tp, option, fmt.Sprintf("len(%s)", varSrc), fproto_gowrap_validator.VEID_LENGTH)
-	if err != nil {
-		return err
+	if !length_fields.isEmpty() {
+		// check if blank first
+		g.P("if ", varSrc, ` != "" {`)
+		g.In()
+
+		err := generateRangeValidation(length_fields, g, vh, tp, option, fmt.Sprintf("len(%s)", varSrc), fproto_gowrap_validator.VEID_LENGTH)
+		if err != nil {
+			return err
+		}
+
+		g.Out()
+		g.P("}")
 	}
 
 	return nil
@@ -413,6 +431,32 @@ func (t *Validator_Std) generateValidation_scalar_bool(g *fproto_gowrap.Generato
 	}
 
 	return nil
+}
+
+func (t *Validator_Std) generateValidation_message(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) (bool, error) {
+	errors_alias := g.DeclDep("errors", "errors")
+
+	is_ok := false
+
+	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
+		if agn == "required" {
+			//
+			// required
+			//
+			is_ok = true
+			if agv.Source == "true" {
+				g.P("if ", varSrc, " == nil {")
+				g.In()
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+`.New("Cannot be blank")`, agn, fproto_gowrap_validator.VEID_REQUIRED)
+				g.Out()
+				g.P("}")
+			}
+		}
+	}
+
+	return is_ok, nil
 }
 
 //
