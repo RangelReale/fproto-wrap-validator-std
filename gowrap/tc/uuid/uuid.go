@@ -93,7 +93,7 @@ func (v *TypeValidator_NullUUID) GenerateValidation(g *fproto_gowrap.GeneratorFi
 		if agn == "required" {
 			supported = true
 			if option.AggregatedValues[agn].Source == "true" {
-				g.P("if !", varSrc, ".Valid || ", uuid_alias, ".Equal(", varSrc, ".UUID, uuid.Nil) {")
+				g.P("if ", varSrc, ".Valid && ", uuid_alias, ".Equal(", varSrc, ".UUID, uuid.Nil) {")
 				g.In()
 				vh.GenerateValidationErrorAdd(g.G(), errors_alias+".New(\"Cannot be blank\")", agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
