@@ -80,7 +80,7 @@ func generateRangeValidation(ranges *rangeValidation, g *fproto_gowrap.Generator
 	}
 
 	if ranges.lt != nil {
-		g.P("if ", varSrc, " > ", *ranges.lt, ltadd, " {")
+		g.P("if ", varSrc, " >= ", *ranges.lt, ltadd, " {")
 		g.In()
 		error_msg := fmt.Sprintf(`%s.New("%s must be lower than %s")`, errors_alias, validationDescription, *ranges.lt)
 		vh.GenerateValidationErrorAdd(g.G(), error_msg, validationItemPrefix+"lt", errorId, "lt", *ranges.lt)
@@ -89,7 +89,7 @@ func generateRangeValidation(ranges *rangeValidation, g *fproto_gowrap.Generator
 	}
 
 	if ranges.lte != nil {
-		g.P("if ", varSrc, " >= ", *ranges.lte, ltadd, " {")
+		g.P("if ", varSrc, " > ", *ranges.lte, ltadd, " {")
 		g.In()
 		error_msg := fmt.Sprintf(`%s.New("%s must be lower or equals to %s")`, errors_alias, validationDescription, *ranges.lte)
 		vh.GenerateValidationErrorAdd(g.G(), error_msg, validationItemPrefix+"lte", errorId, "lte", *ranges.lte)
