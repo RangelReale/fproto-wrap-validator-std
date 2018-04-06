@@ -1,45 +1,45 @@
-syntax = "proto2";
+syntax = "proto3";
 package validator;
 option go_package = "github.com/RangelReale/fproto-wrap-validator-std/gowrap/gwproto";
 
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.FieldOptions {
-    optional FieldValidator field = 48771;
-    optional RepeatedFieldValidator rfield = 48772;
+    FieldValidator field = 48771;
+    RepeatedFieldValidator rfield = 48772;
 }
 
 // Field validator. In the case of repeated or map, there rules apply to EACH item, not to the repeated field itself.
 // For the repeated field itself rules, see RepeatedFieldValidator.
 message FieldValidator {
     // Whether the field is required.
-    optional bool required = 1;
+    bool required = 1;
     // Uses a Golang RE2-syntax regex to match the field contents.
-    optional string regex = 2;
+    string regex = 2;
     // Only allow the exact string value.
-    optional string string_eq = 20;
+    string string_eq = 20;
 
     // Field value of integer strictly greater than this value.
-    optional int64 int_gt = 30;
+    int64 int_gt = 30;
     // Field value of integer strictly smaller than this value.
-    optional int64 int_lt = 31;
+    int64 int_lt = 31;
     // Field value of integer strictly greater than this value.
-    optional int64 int_gte = 32;
+    int64 int_gte = 32;
     // Field value of integer strictly smaller than this value.
-    optional int64 int_lte = 33;
+    int64 int_lte = 33;
     // Field value of integer exactly this value.
-    optional int64 int_eq = 34;
+    int64 int_eq = 34;
     // In the case of enums, only allow defined values, else ignored.
-    optional bool int_enum_check = 70;
+    bool int_enum_check = 70;
 
     // Field value of double strictly greater than this value.
     // Note that this value can only take on a valid floating point
     // value. Use together with float_epsilon if you need something more specific.
-    optional double float_gt = 40;
+    double float_gt = 40;
     // Field value of double strictly smaller than this value.
     // Note that this value can only take on a valid floating point
     // value. Use together with float_epsilon if you need something more specific.
-    optional double float_lt = 41;
+    double float_lt = 41;
     // Field value of double describing the epsilon within which
     // any comparison should be considered to be true. For example,
     // when using float_gt = 0.35, using a float_epsilon of 0.05
@@ -47,38 +47,38 @@ message FieldValidator {
     // thought of as a {float_value_condition} +- {float_epsilon}.
     // If unset, no correction for floating point inaccuracies in
     // comparisons will be attempted.
-    optional double float_epsilon = 42;
+    double float_epsilon = 42;
     // Floating-point value compared to which the field content should be greater or equal.
-    optional double float_gte = 43;
+    double float_gte = 43;
     // Floating-point value compared to which the field content should be smaller or equal.
-    optional double float_lte = 44;
+    double float_lte = 44;
     // Floating-point value compared to which the field content should be equal or whithin the epsilon.
-    optional double float_eq = 45;
+    double float_eq = 45;
     // Field value of length greater than this value.
-    optional int64 length_gt = 50;
+    int64 length_gt = 50;
     // Field value of length smaller than this value.
-    optional int64 length_lt = 51;
+    int64 length_lt = 51;
     // Field value of length greater than this value.
-    optional int64 length_gte = 52;
+    int64 length_gte = 52;
     // Field value of length smaller than this value.
-    optional int64 length_lte = 53;
+    int64 length_lte = 53;
     // Field value of integer strictly equal this value.
-    optional int64 length_eq = 54;
+    int64 length_eq = 54;
 
-    optional bool bool_eq = 60;
+    bool bool_eq = 60;
 }
 
 message RepeatedFieldValidator {
     // Whether the field is required.
-    optional bool required = 1;
+    bool required = 1;
     // Field value of length greater than this value.
-    optional int64 length_gt = 12;
+    int64 length_gt = 12;
     // Field value of length smaller than this value.
-    optional int64 length_lt = 13;
+    int64 length_lt = 13;
     // Field value of length greater than this value.
-    optional int64 length_gte = 14;
+    int64 length_gte = 14;
     // Field value of length smaller than this value.
-    optional int64 length_lte = 15;
+    int64 length_lte = 15;
     // Field value of integer strictly equal this value.
-    optional int64 length_eq = 16;
+    int64 length_eq = 16;
 }
