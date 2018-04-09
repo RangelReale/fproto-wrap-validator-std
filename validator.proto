@@ -16,8 +16,13 @@ message FieldValidator {
     bool required = 1;
     // Uses a Golang RE2-syntax regex to match the field contents.
     string regex = 2;
+
     // Only allow the exact string value.
     string string_eq = 20;
+    // Only allow items in this list.
+    repeated string string_in = 22;
+    // Only allow items NOT in this list.
+    repeated string string_not_in = 23;
 
     // Field value of integer strictly greater than this value.
     int64 int_gt = 30;
@@ -29,8 +34,12 @@ message FieldValidator {
     int64 int_lte = 33;
     // Field value of integer exactly this value.
     int64 int_eq = 34;
+    // Only allow items in this list.
+    repeated int64 int_in = 35;
+    // Only allow items NOT in this list.
+    repeated int64 int_not_in = 36;
     // In the case of enums, only allow defined values, else ignored.
-    bool int_enum_check = 70;
+    bool int_enum_check = 39;
 
     // Field value of double strictly greater than this value.
     // Note that this value can only take on a valid floating point
@@ -54,6 +63,11 @@ message FieldValidator {
     double float_lte = 44;
     // Floating-point value compared to which the field content should be equal or whithin the epsilon.
     double float_eq = 45;
+    // Only allow items in this list.
+    repeated double float_in = 46;
+    // Only allow items NOT in this list.
+    repeated double float_not_in = 47;
+
     // Field value of length greater than this value.
     int64 length_gt = 50;
     // Field value of length smaller than this value.
@@ -64,7 +78,12 @@ message FieldValidator {
     int64 length_lte = 53;
     // Field value of integer strictly equal this value.
     int64 length_eq = 54;
+    // Only allow items in this list.
+    repeated int64 length_in = 55;
+    // Only allow items NOT in this list.
+    repeated int64 length_not_in = 56;
 
+    // Bool must be this value
     bool bool_eq = 60;
 }
 
@@ -81,4 +100,8 @@ message RepeatedFieldValidator {
     int64 length_lte = 15;
     // Field value of integer strictly equal this value.
     int64 length_eq = 16;
+    // Only allow items in this list.
+    repeated int64 length_in = 17;
+    // Only allow items NOT in this list.
+    repeated int64 length_not_in = 18;
 }

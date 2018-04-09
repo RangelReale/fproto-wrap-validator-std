@@ -152,6 +152,36 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 				}
 			}
 
+		} else if agn == "int_in" || agn == "int_not_in" {
+			supported = true
+
+			inVal := &inValidation{
+				is_not:    agn == "int_not_in",
+				is_string: false,
+				list:      make([]string, 0),
+			}
+
+			// build a list of values
+			if len(agv.Array) == 0 {
+				inVal.list = append(inVal.list, agv.Source)
+			} else {
+				for _, ai := range agv.Array {
+					if len(ai.Array) > 0 {
+						return fmt.Errorf("Nested arrays are not supported for %s", agn)
+					}
+
+					inVal.list = append(inVal.list, ai.Source)
+				}
+			}
+
+			if inVal.isEmpty() {
+				return fmt.Errorf("At least one value is required for %s", agn)
+			}
+
+			if err := generateInValidation(inVal, g, vh, tp, option, varSrc); err != nil {
+				return err
+			}
+
 		} else if strings.HasPrefix(agn, "int_") {
 			supported = true
 
@@ -210,6 +240,39 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 				vh.GenerateValidationErrorAdd(g.G(), error_msg, agn, fproto_gowrap_validator.VEID_REQUIRED)
 				g.Out()
 				g.P("}")
+			}
+		} else if agn == "float_in" || agn == "float_not_in" {
+			supported = true
+
+			inVal := &inValidation{
+				is_not:    agn == "float_not_in",
+				is_string: false,
+				list:      make([]string, 0),
+			}
+
+			if aep, aisep := option.AggregatedValues["float_epsilon"]; aisep {
+				inVal.epsilon = &aep.Source
+			}
+
+			// build a list of values
+			if len(agv.Array) == 0 {
+				inVal.list = append(inVal.list, agv.Source)
+			} else {
+				for _, ai := range agv.Array {
+					if len(ai.Array) > 0 {
+						return fmt.Errorf("Nested arrays are not supported for %s", agn)
+					}
+
+					inVal.list = append(inVal.list, ai.Source)
+				}
+			}
+
+			if inVal.isEmpty() {
+				return fmt.Errorf("At least one value is required for %s", agn)
+			}
+
+			if err := generateInValidation(inVal, g, vh, tp, option, varSrc); err != nil {
+				return err
 			}
 		} else if strings.HasPrefix(agn, "float_") {
 			supported = true
@@ -299,6 +362,36 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 			g.P("}")
 			g.Out()
 			g.P("}")
+		} else if agn == "string_in" || agn == "string_not_in" {
+			supported = true
+
+			inVal := &inValidation{
+				is_not:    agn == "string_not_in",
+				is_string: true,
+				list:      make([]string, 0),
+			}
+
+			// build a list of values
+			if len(agv.Array) == 0 {
+				inVal.list = append(inVal.list, agv.Source)
+			} else {
+				for _, ai := range agv.Array {
+					if len(ai.Array) > 0 {
+						return fmt.Errorf("Nested arrays are not supported for %s", agn)
+					}
+
+					inVal.list = append(inVal.list, ai.Source)
+				}
+			}
+
+			if inVal.isEmpty() {
+				return fmt.Errorf("At least one value is required for %s", agn)
+			}
+
+			if err := generateInValidation(inVal, g, vh, tp, option, varSrc); err != nil {
+				return err
+			}
+
 		} else if strings.HasPrefix(agn, "length_") {
 			supported = true
 

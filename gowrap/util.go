@@ -2,6 +2,8 @@ package fproto_gowrap_validator_std
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/RangelReale/fdep"
 	"github.com/RangelReale/fproto"
@@ -9,6 +11,9 @@ import (
 	"github.com/RangelReale/fproto-wrap/gowrap"
 )
 
+//
+// range validation
+//
 type rangeValidation struct {
 	gt      *string
 	gte     *string
@@ -114,6 +119,60 @@ func generateRangeValidation(ranges *rangeValidation, g *fproto_gowrap.Generator
 		g.Out()
 		g.P("}")
 	}
+
+	return nil
+}
+
+//
+// in validation
+//
+type inValidation struct {
+	list      []string
+	epsilon   *string
+	is_not    bool
+	is_string bool
+}
+
+func (r *inValidation) isEmpty() bool {
+	return len(r.list) == 0
+}
+
+func generateInValidation(in *inValidation, g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType,
+	option *fproto.OptionElement, varSrc string) error {
+
+	// TODO: support epsilon
+	errors_alias := g.DeclDep("errors", "errors")
+
+	validationItem := "in"
+	compare := "!="
+	ccond := " && "
+	if in.is_not {
+		validationItem = "not_in"
+		compare = "=="
+		ccond = " || "
+	}
+
+	compare_list := make([]string, 0)
+	for _, l := range in.list {
+		cvalue := l
+		if in.is_string {
+			cvalue = strconv.Quote(l)
+		}
+		citem := fmt.Sprintf("%s %s %s", varSrc, compare, cvalue)
+		compare_list = append(compare_list, citem)
+	}
+
+	g.P("if ", strings.Join(compare_list, ccond), " {")
+	g.In()
+	var error_msg string
+	if in.is_not {
+		error_msg = fmt.Sprintf(`%s.New("Must not be one of the invalid values")`, errors_alias)
+	} else {
+		error_msg = fmt.Sprintf(`%s.New("Must be one of the valid values")`, errors_alias)
+	}
+	vh.GenerateValidationErrorAdd(g.G(), error_msg, validationItem, fproto_gowrap_validator.VEID_INVALID_VALUE)
+	g.Out()
+	g.P("}")
 
 	return nil
 }
