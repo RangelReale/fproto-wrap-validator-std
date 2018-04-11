@@ -15,11 +15,11 @@ type ValidatorPlugin_Std struct {
 }
 
 func (tp *ValidatorPlugin_Std) GetValidator(validatorType *fdep.OptionType) fproto_gowrap_validator.Validator {
-	// validator.field ||validator.rfield
+	// validator.field ||validator.rfield ||validator.oofield
 	if validatorType.Option != nil &&
 		validatorType.Option.DepFile.FilePath == "github.com/RangelReale/fproto-wrap-validator-std/validator.proto" &&
 		validatorType.Option.DepFile.ProtoFile.PackageName == "validator" {
-		if validatorType.Name == "field" {
+		if validatorType.Name == "field" || validatorType.Name == "oofield" {
 			return &Validator_Std{validatorType: validatorType}
 		} else if validatorType.Name == "rfield" {
 			return &Validator_Std_Repeated{validatorType: validatorType}
@@ -44,7 +44,7 @@ func (tp *Validator_Std) FPValidator() {
 }
 
 func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, option *fproto.OptionElement, varSrc string) error {
-	if option.ParenthesizedName != "validator.field" {
+	if option.ParenthesizedName != "validator.field" && option.ParenthesizedName != "validator.oofield" {
 		return nil
 	}
 
@@ -74,7 +74,16 @@ func (t *Validator_Std) GenerateValidation(g *fproto_gowrap.GeneratorFile, vh fp
 		}
 	}
 
-	return fmt.Errorf("Unknown type for validator: %s", tp.FullOriginalName())
+	// try to check oneof
+	if _, tioook := tp.Item.(*fproto.OneOfFieldElement); tioook {
+		if voook, vooerr := t.generateValidation_oneof(g, vh, tp, tinfo, option, varSrc); vooerr != nil {
+			return vooerr
+		} else if voook {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Unknown type for validator: %s", tp.TypeDescription())
 }
 
 func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
@@ -108,7 +117,7 @@ func (t *Validator_Std) generateValidation_scalar(g *fproto_gowrap.GeneratorFile
 		return t.generateValidation_scalar_bool(g, vh, tp, tinfo, option, varSrc)
 	}
 
-	return fmt.Errorf("Validation not supported for type %s", tp.FullOriginalName())
+	return fmt.Errorf("Validation not supported for type %s", tp.TypeDescription())
 }
 
 func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) error {
@@ -207,7 +216,7 @@ func (t *Validator_Std) generateValidation_scalar_int(g *fproto_gowrap.Generator
 		}
 
 		if !supported {
-			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.TypeDescription())
 		}
 	}
 
@@ -302,7 +311,7 @@ func (t *Validator_Std) generateValidation_scalar_float(g *fproto_gowrap.Generat
 		}
 
 		if !supported {
-			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.TypeDescription())
 		}
 	}
 
@@ -417,7 +426,7 @@ func (t *Validator_Std) generateValidation_scalar_string(g *fproto_gowrap.Genera
 		}
 
 		if !supported {
-			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.TypeDescription())
 		}
 	}
 
@@ -486,7 +495,7 @@ func (t *Validator_Std) generateValidation_scalar_byte(g *fproto_gowrap.Generato
 		}
 
 		if !supported {
-			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.TypeDescription())
 		}
 	}
 
@@ -519,7 +528,7 @@ func (t *Validator_Std) generateValidation_scalar_bool(g *fproto_gowrap.Generato
 		}
 
 		if !supported {
-			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.FullOriginalName())
+			return fmt.Errorf("Validation %s not supported for type %s", agn, tp.TypeDescription())
 		}
 	}
 
@@ -527,6 +536,32 @@ func (t *Validator_Std) generateValidation_scalar_bool(g *fproto_gowrap.Generato
 }
 
 func (t *Validator_Std) generateValidation_message(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) (bool, error) {
+	errors_alias := g.DeclDep("errors", "errors")
+
+	is_ok := false
+
+	for _, agn := range option.AggregatedSorted() {
+		agv := option.AggregatedValues[agn]
+
+		if agn == "required" {
+			//
+			// required
+			//
+			is_ok = true
+			if agv.Source == "true" {
+				g.P("if ", varSrc, " == nil {")
+				g.In()
+				vh.GenerateValidationErrorAdd(g.G(), errors_alias+`.New("Cannot be blank")`, agn, fproto_gowrap_validator.VEID_REQUIRED)
+				g.Out()
+				g.P("}")
+			}
+		}
+	}
+
+	return is_ok, nil
+}
+
+func (t *Validator_Std) generateValidation_oneof(g *fproto_gowrap.GeneratorFile, vh fproto_gowrap_validator.ValidatorHelper, tp *fdep.DepType, tinfo fproto_gowrap.TypeInfo, option *fproto.OptionElement, varSrc string) (bool, error) {
 	errors_alias := g.DeclDep("errors", "errors")
 
 	is_ok := false
@@ -614,7 +649,7 @@ func (t *Validator_Std_Repeated) GenerateValidationRepeated(g *fproto_gowrap.Gen
 		}
 
 		if !supported {
-			return fmt.Errorf("Validation %s not supported for repeated of type %s", agn, tp.FullOriginalName())
+			return fmt.Errorf("Validation %s not supported for repeated of type %s", agn, tp.TypeDescription())
 		}
 	}
 

@@ -9,6 +9,10 @@ extend google.protobuf.FieldOptions {
     RepeatedFieldValidator rfield = 48772;
 }
 
+extend google.protobuf.OneofOptions {
+    OneOfFieldValidator oofield = 48773;
+}
+
 // Field validator. In the case of repeated or map, there rules apply to EACH item, not to the repeated field itself.
 // For the repeated field itself rules, see RepeatedFieldValidator.
 message FieldValidator {
@@ -104,4 +108,9 @@ message RepeatedFieldValidator {
     repeated int64 length_in = 17;
     // Only allow items NOT in this list.
     repeated int64 length_not_in = 18;
+}
+
+message OneOfFieldValidator {
+    // Whether the field is required.
+    bool required = 1;
 }
