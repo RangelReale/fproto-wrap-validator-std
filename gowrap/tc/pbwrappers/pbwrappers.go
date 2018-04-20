@@ -64,27 +64,27 @@ func (v *TypeValidator_PBWrappers) GenerateValidation(g *fproto_gowrap.Generator
 
 	switch tp.Name {
 	case "Int64Value", "Int32Value", "UInt64Value", "UInt32Value":
-		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_int(g, vh, tp, option, varSrc+".Value", true)
+		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_int(g, vh, tp, option, varSrc+".WValue", true)
 		if err != nil {
 			return err
 		}
 	case "DoubleValue", "FloatValue":
-		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_float(g, vh, tp, option, varSrc+".Value", true)
+		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_float(g, vh, tp, option, varSrc+".WValue", true)
 		if err != nil {
 			return err
 		}
 	case "StringValue":
-		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_string(g, vh, tp, option, varSrc+".Value", true)
+		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_string(g, vh, tp, option, varSrc+".WValue", true)
 		if err != nil {
 			return err
 		}
 	case "ByteValue":
-		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_byte(g, vh, tp, option, varSrc+".Value", true)
+		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_byte(g, vh, tp, option, varSrc+".WValue", true)
 		if err != nil {
 			return err
 		}
 	case "BoolValue":
-		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_bool(g, vh, tp, option, varSrc+".Value", true)
+		err := fproto_gowrap_validator_std_scalar.GenerateValidation_scalar_bool(g, vh, tp, option, varSrc+".WValue", true)
 		if err != nil {
 			return err
 		}
